@@ -1,0 +1,29 @@
+//@version=6
+strategy("TradingLab MACD Test", overlay=true, initial_capital=10000, default_qty_type=strategy.percent_of_equity, default_qty_value=100, commission_type=strategy.commission.percent, commission_value=0.05)
+
+[macdLine, signalLine, hist] = ta.macd(close, 12, 26, 9)
+sma200 = ta.sma(close, 200)
+
+plot(sma200, "200 SMA", color=color.orange, linewidth=2)
+
+longCond = ta.crossover(macdLine, signalLine) and macdLine < 0 and close > sma200
+shortCond = ta.crossunder(macdLine, signalLine) and macdLine > 0 and close < sma200
+
+var float longStop = na
+var float longTarget = na
+var float shortStop = na
+var float shortTarget = na
+
+if longCond and strategy.position_size == 0
+    risk = close - sma200
+    longStop := sma200
+    longTarget := close + 1.5 * risk
+    strategy.entry("Long", strategy.long)
+    strategy.exit("Long Exit", "Long", stop=longStop, limit=longTarget)
+
+if shortCond and strategy.position_size == 0
+    risk = sma200 - close
+    shortStop := sma200
+    shortTarget := close - 1.5 * risk
+    strategy.entry("Short", strategy.short)
+    strategy.exit("Short Exit", "Short", stop=shortStop, limit=shortTarget)
